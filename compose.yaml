@@ -1,0 +1,56 @@
+services:
+  backend:
+    build:
+      context: backend
+    ports:
+      - '8080:8080'
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - APP_DATABASE_USER=${APP_DATABASE_USER}
+      - APP_DATABASE_PASSWORD=${APP_DATABASE_PASSWORD}
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  db:
+    image: mysql:8.1.0
+    restart: always
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'mysqladmin ping -h 127.0.0.1 --password="$$(cat /run/secrets/db-password)" --silent',
+        ]
+      interval: 3s
+      retries: 5
+      start_period: 30s
+    secrets:
+      - db-password
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./db/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    # 本当は3306にマッピングしたいが、ホストがすでに使っているため3307
+    ports:
+      - '3307:3306'
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db-password
+      - TZ=Asia/Tokyo
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  db-data:
+
+secrets:
+  db-password:
+    file: db/password.txt

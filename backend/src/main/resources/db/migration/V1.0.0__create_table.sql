@@ -1,0 +1,1 @@
+CREATE TABLE test_table (id int unsigned AUTO_INCREMENT primary key , value varchar(50));
