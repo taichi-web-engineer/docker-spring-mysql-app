@@ -1,2 +1,3 @@
 .env
-gradle.properties
+password.txt
+init-db.sql
